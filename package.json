@@ -1,0 +1,11 @@
+{
+  "name": "es-observable-cancellation",
+  "version": "0.0.1",
+  "repository": "zenparsing/es-observable-cancellation",
+  "description": "An Implementation of CancelTokens on top of Observable",
+  "homepage": "https://github.com/zenparsing/es-observable-cancellation",
+  "license": "MIT",
+  "dependencies": {
+    "zen-observable": "^0.3.0"
+  }
+}

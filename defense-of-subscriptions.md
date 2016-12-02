@@ -193,3 +193,7 @@ class CancelToken {
   }
 }
 ```
+
+My intuition tells me that the CancelToken design drafted here provides the correct layering of concerns and allows cancel tokens to be used in situations which have strict timing requirements. In addition, the Observable API provides the ability to detach cancel handlers which is missing from the current promise-based design. I hope this exploration at least starts some interesting conversation on the topic.
+
+Thanks for reading!

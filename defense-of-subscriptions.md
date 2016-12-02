@@ -187,9 +187,9 @@ We could even add this transform directly to the CancelToken API:
 class CancelToken {
   // etc...
   get promise() {
-    return this._promise || this._promise = new Promise(resolve => {
+    return this._promise || (this._promise = new Promise(resolve => {
       this.subscribe(resolve);
-    });
+    }));
   }
 }
 ```

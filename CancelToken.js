@@ -15,6 +15,7 @@ class Cancel {
 class CancelToken {
 
   constructor(fn) {
+    this._promise = undefined;
     this._reason = undefined;
 
     this._observers = new Set();
@@ -51,6 +52,12 @@ class CancelToken {
 
   get reason() {
     return this._reason;
+  }
+
+  get promise() {
+    return this._promise || (this._promise = new Promise(resolve => {
+      this.subscribe(resolve);
+    }));
   }
 
   throwIfRequested() {

@@ -98,14 +98,14 @@ class Observable {
 
   // subscribe, etc...
 
-  forEach(onNext, cancelToken) {
+  forEach(onNext, cancel) {
     return new Promise((resolve, reject) => {
       if (typeof fn !== "function")
         throw new TypeError(`${ fn } is not a function`);
 
       let source = this;
-      if (cancelToken) {
-        source = takeUntil(source, Observable.from(cancelToken));
+      if (cancel) {
+        source = takeUntil(source, Observable.from(cancel));
       }
 
       let subscription;
@@ -136,4 +136,36 @@ class Observable {
 }
 ```
 
-*TODO: Talk about downsides, how to convert a cancel token into a promise, etc.*
+As you can see, `forEach` is implemented without referencing the CancelToken API. It can take any object that provides a `Symbol.observable` method as the cancellation notifier. In this way we avoid any circular dependencies between Observable and CancelToken.
+
+What are the advantages of this design?
+
+- It provides an elegant and straightforward layering of concerns.
+- It solves the issues with `cancelToken.promise` when applied to use-cases which are time or memory sensitive without having to invent special behavior for `CancelToken.race`.
+
+What are the disadvantages?
+
+- We've lost some of the desirable properties that arise from using promises to transmit asynchronous results.
+  - Synchronous side effects can occur as a result of calling `cancel`.
+  - Like all observables, the observer supplied to `cancelToken.subscribe` may be notified synchronously (if cancellation has already been requested).
+
+This may make cancel tokens unsuitable for passing across trust boundaries. One solution to this problem might be to provide a simple combinator which ensures that cancellation handlers are called in a future turn.
+
+```js
+function safeToken(source) {
+  return new CancelToken(cancel => {
+    source.subscribe(reason => {
+      // Invoke cancel with an empty stack. Side effects
+      // from calling cancellation handlers are isolated
+      // to an empty stack.
+      Promise.resolve().then(() => cancel(reason));
+    });
+  });
+}
+
+let { token, cancel } = CancelToken.source;
+untrustedCode(safeToken(token));
+// Side-effects from cancel handlers are now confined
+// to an empty stack
+cancel();
+```

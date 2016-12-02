@@ -148,8 +148,9 @@ What are the disadvantages?
 - We've lost some of the desirable properties that arise from using promises to transmit asynchronous results.
   - Synchronous side effects can occur as a result of calling `cancel`.
   - Like all observables, the observer supplied to `cancelToken.subscribe` may be notified synchronously (if cancellation has already been requested).
+- Some users might want to compose over cancel tokens as promises.
 
-This may make cancel tokens unsuitable for passing across trust boundaries. One solution to this problem might be to provide a simple combinator which ensures that cancellation handlers are called in a future turn.
+The first consideration might make cancel tokens unsuitable for passing across trust boundaries. One solution to this problem might be to provide a simple combinator which ensures that cancellation handlers are called in a future turn.
 
 ```js
 function safeToken(source) {
@@ -168,4 +169,27 @@ untrustedCode(safeToken(token));
 // Side-effects from cancel handlers are now confined
 // to an empty stack
 cancel();
+```
+
+For users that want to treat cancel tokens as promises, the conversion is quite simple:
+
+```js
+function cancelTokenToPromise(token) {
+  return new Promise(resolve => {
+    token.subscribe(resolve);
+  });
+}
+```
+
+We could even add this transform directly to the CancelToken API:
+
+```js
+class CancelToken {
+  // etc...
+  get promise() {
+    return this._promise || this._promise = new Promise(resolve => {
+      this.subscribe(resolve);
+    });
+  }
+}
 ```

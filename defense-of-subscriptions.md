@@ -149,6 +149,7 @@ What are the disadvantages?
   - Synchronous side effects can occur as a result of calling `cancel`.
   - Like all observables, the observer supplied to `cancelToken.subscribe` may be notified synchronously (if cancellation has already been requested).
 - Some users might want to compose over cancel tokens as promises.
+- It means that the Observable API has to reach consensus before we can move forward with CancelToken.
 
 The first consideration might make cancel tokens unsuitable for passing across trust boundaries. One solution to this problem might be to provide a simple combinator which ensures that cancellation handlers are called in a future turn.
 
@@ -193,6 +194,10 @@ class CancelToken {
   }
 }
 ```
+
+In this way, we can provide the same exact API to the end-user that is currently proposed for CancelToken with all of the desired synchronous propagation semantics.
+
+But doesn't this mean that CancelToken will be blocked on achieving consensus for Observable? Maybe not. If we take the CancelToken API as it currently stands (adding synchronous propagation in `CancelToken.race` of course), then I believe that a rewrite on top of Observable will be a backward compatible change. If this holds true, then we can proceed forward with the current CancelToken API and then add the `subscribe` and `Symbol.observable` methods at a later time.
 
 My intuition tells me that the CancelToken design drafted here provides the correct layering of concerns and allows cancel tokens to be used in situations which have strict timing requirements. In addition, the Observable API provides the ability to detach cancel handlers which is missing from the current promise-based design. I hope this exploration at least starts some interesting conversation on the topic.
 
